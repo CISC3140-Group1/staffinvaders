@@ -5,7 +5,7 @@
 function GameSettings() {
   this.width = 640;
   this.height = 480;
-  this.gameSpeed = 1;
+  this.speed = 1;
 }
 
 GameSettings.prototype.setDimensions = function(width, height) {
@@ -79,7 +79,7 @@ function Enemy(i, j, r, c, gs) {
   this.y = enemyboxheight * i;
   this.width = enemyboxwidth - padding;
   this.height = enemyboxheight - padding;
-  this.direction = -1*gs.gameSpeed;
+  this.direction = gs.speed;
 }
 
 // update -- moves enemy object left or right, swapping when it
@@ -213,7 +213,7 @@ var game = (function() {
         if (e.target == document.body) {
           e.preventDefault();
         }
-        if (_shootTimer >= 20) {
+        if (_shootTimer >= 15) {
           _shootTimer = 0;
           _player.shoot();
         }
@@ -223,7 +223,7 @@ var game = (function() {
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
       for (var n = 0; n < _cols; n++) {
-        entity_row.push(new Enemy(m, n+1, _rows, _cols, _gameSettings));
+        entity_row.push(new Enemy(m, n, _rows, _cols, _gameSettings));
       }
       _entities.push(entity_row);
     }
@@ -260,9 +260,9 @@ var game = (function() {
                 game.missiles()[k] = null;
                 _entities[m][n] = null;
                 deadships+=1;
-                if (deadships == 40) {
-                  _endgame();
-                  return;
+                if (deadships == _rows*_cols) {
+                  deadships = 0;
+                  levelUp()
                 }
               }
         }
@@ -290,6 +290,17 @@ var game = (function() {
       return e != null;
     });
     _missiles.push(missile);
+  }
+
+  // proceedLevel -- respawns the enemies and increases speed
+  function levelUp() {
+    console.log("LEVEL UP")
+    _gameSettings.speed += 0.5;
+    for (var m = 0; m < _rows; m++) {
+      for (var n = 0; n < _cols; n++) {
+        _entities[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
+      }
+    }
   }
 
   // _endGame -- displays a "GAME OVER" screen
