@@ -1,10 +1,14 @@
 # 3140-finalproj
 
-## Running the game
+## Run the game - open index.html
+`>> open index.html`
 
-Open index.html file in your browser.
+## Controls
+LEFT_ARROW - moves the player spaceship left until the left edge
+RIGHT_ARROW - moves the player spaceship right until the right edge
+SPACE_BAR - shoots a missile from the player's space ship
 
-## What does it do so far?
-
-8x5 red boxes move from left to right and get closer to the bottom.
-If a red box hits the bottom part of the screen, shows GAME OVER.
+## Game Logic
+ENEMY - moves left/right swapping directions AND moving down each time at least one enemy hits an edge.
+PLAYER - can move horizontally and shoot
+MISSILE - trajects upwards until it hits an ENEMY or hits the top edge.
