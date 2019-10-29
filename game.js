@@ -179,17 +179,13 @@ var game = (function() {
         _player.move(-movementLength);
         renderer.render();
       } else if (e.keyCode == 32) {
-        if (_shootTimer >= 40) {
+        if (_shootTimer >= 20) {
           _shootTimer = 0;
           _player.shoot();
         }
       }
     }
-    document.onkeyup = function(e) {
-      if(e.keyCode == 32) {
-        _player.shoot();
-      }
-    }
+    
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
       for (var n = 0; n < _cols; n++) {
