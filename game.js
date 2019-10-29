@@ -24,7 +24,7 @@ function Missile() {
   this.y = game.player().y;
   this.width = 4;
   this.height = game.player().height/2;
-  this.direction = 3;
+  this.direction = 8;
 }
 
 // update -- missile moves to top per iteration 
@@ -124,7 +124,7 @@ var renderer = (function () {
 
   // _drawMissile -- draws the missile object
   function _drawMissile(context, missile) {
-    context.fillStyle = "green";
+    context.fillStyle = "white";
     context.fillRect(missile.x, missile.y, missile.width, missile.height);
   }
   
