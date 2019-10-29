@@ -1,3 +1,18 @@
+/* gameSettings Object
+ * Specifies the sizing of the window
+ */
+
+function GameSettings() {
+  this.width = 640;
+  this.height = 480;
+  this.gameSpeed = 1;
+}
+
+GameSettings.prototype.setDimensions = function(width, height) {
+  this.width = width;
+  this.height = height;
+}
+
 /* Missile Object
  * When the user presses SPACEBAR, a projectile should shoot
  * from the user's x-position until it hits an enemy or the
@@ -26,19 +41,23 @@ Missile.prototype.update = function() {
  * spawn missiles.
  */
 
-function Player(x) {
+function Player(x, gs) {
+  var playerHeight = gs.height / 10;
   this.x = x;
-  this.y = 180;
-  this.width = 20;
-  this.height = 20;
+  this.y = game.gameSettings().height - playerHeight * 1.2;
+  this.width = playerHeight * 1.5;
+  this.height = playerHeight;
 }
 
 // move -- moves the player's ship d-pixels left/right
 Player.prototype.move = function(d) {
-  if (this.x+d < 0 || this.x+this.width+d > game.gameFieldWidth()) {
-    return;
+  if (this.x+d < 0) {
+    this.x = 0;
+  } else if (this.x+this.width+d > game.gameSettings().width) {
+    this.x = game.gameSettings().width-this.width;
+  } else {
+    this.x += d;
   }
-  this.x += d;
 }
 
 // shoot -- creates a new Missile object at player's x location
@@ -51,20 +70,22 @@ Player.prototype.shoot = function() {
  * game timer.
  */
 
-function Enemy(x, y) {
-  this.x = x;
-  this.y = y;
-  this.i = -1;
-  this.j = -1;
-  this.width = 10;
-  this.height = 6;
-  this.direction = -1;
+function Enemy(i, j, r, c, gs) {
+  var boxwidth = gs.width * 3 / 4;
+  var enemyboxwidth = boxwidth / c;
+  var enemyboxheight = enemyboxwidth * (9 / 16);
+  var padding = enemyboxwidth / 7;
+  this.x = enemyboxwidth * j;
+  this.y = enemyboxheight * i;
+  this.width = enemyboxwidth - padding;
+  this.height = enemyboxheight - padding;
+  this.direction = -1*gs.gameSpeed;
 }
 
 // update -- moves enemy object left or right, swapping when it
 //           hits an edge.
-Enemy.prototype.update = function() {
-  if (this.x <= 0 || this.x + this.width >= game.gameFieldWidth()) {
+Enemy.prototype.update = function(gs) {
+  if (this.x <= 0 || this.x + this.width >= game.gameSettings().width) {
     return true;
   }
   return false;
@@ -73,7 +94,7 @@ Enemy.prototype.update = function() {
 // advance -- moves enemy down a level
 Enemy.prototype.advance = function() {
   this.direction *= -1;
-  this.y += 10;
+  this.y += this.height/2;
   if (this.y + this.height >= game.player().y+4) {
     return true
   }
@@ -143,7 +164,7 @@ var physics = (function() {
     for (var i = 0; i < game.rows(); i++) {
       for (var j = 0; j < game.cols(); j++) {
         if (entities[i][j] == null) continue;
-        entities[i][j].x += entities[i][j].direction;  
+        entities[i][j].x += entities[i][j].direction;
       }
     }
   }
@@ -155,9 +176,8 @@ var physics = (function() {
  * Main control loop for the game.
  */
 var game = (function() {
-  var _player = new Player(0);
-  var _gameFieldHeight = 200;
-  var _gameFieldWidth = 200;
+  var _player;
+  var _gameSettings;
   var _entities = [];
   var leftLimit = 0;
   var rightLimit = 200;
@@ -171,6 +191,13 @@ var game = (function() {
 
   // _start -- initializes game settings
   function _start() {
+    _gameSettings = new GameSettings();
+    _gameSettings.setDimensions(640, 480);
+    _player = new Player(0, _gameSettings);
+    var canvas = document.getElementById("game-layer");
+    canvas.width = _gameSettings.width;
+    canvas.height = _gameSettings.height;
+
     document.onkeydown = function(e) {
       if(e.key == "ArrowRight") {
         _player.move(movementLength);
@@ -189,10 +216,11 @@ var game = (function() {
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
       for (var n = 0; n < _cols; n++) {
-        entity_row.push(new Enemy(5 + (15 * n), 5 + (11 * m)));
+        entity_row.push(new Enemy(m+1, n+1, _rows, _cols, _gameSettings));
       }
       _entities.push(entity_row);
     }
+    console.log(_entities);
     window.requestAnimationFrame(this.update.bind(this));
   }
 
@@ -270,8 +298,7 @@ var game = (function() {
   }
 
   return {
-    gameFieldHeight: function() { return _gameFieldHeight; },
-    gameFieldWidth: function() { return _gameFieldWidth; },
+    gameSettings: function() {return _gameSettings; },
     player: function() { return _player; },
     start: _start,
     update: _update,
@@ -284,5 +311,4 @@ var game = (function() {
   renderer.render();
   window.requestAnimationFrame(this.update.bind(this));
 })();
-
 game.start();
