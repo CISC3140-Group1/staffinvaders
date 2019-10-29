@@ -129,7 +129,7 @@ var renderer = (function () {
     var player = game.player();
     var canvas = document.getElementById("game-layer");
     var context = canvas.getContext("2d");
-    context.fillStyle =  "gray";
+    context.fillStyle =  "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
     var entity, entities = game.entities();
     for (var i = 0; i < game.missiles().length; i++) {
