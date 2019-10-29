@@ -1,6 +1,9 @@
-// Game Entities
+/* Missile Object
+ * When the user presses SPACEBAR, a projectile should shoot
+ * from the user's x-position until it hits an enemy or the
+ * edge of the map.
+ */
 
-// Missile Object
 function Missile() {
   this.x = game.player().x + game.player().width/2 - 2;
   this.y = game.player().y;
@@ -9,6 +12,7 @@ function Missile() {
   this.direction = 3;
 }
 
+// update -- missile moves to top per iteration 
 Missile.prototype.update = function() {
   this.y -= this.direction;
   if (this.y <= -this.height) {
@@ -17,7 +21,11 @@ Missile.prototype.update = function() {
   return true;
 }
 
-// Player Object
+/* Player Object
+ * The user's ship, which can move left and right and
+ * spawn missiles.
+ */
+
 function Player(x) {
   this.x = x;
   this.y = 180;
@@ -25,6 +33,7 @@ function Player(x) {
   this.height = 20;
 }
 
+// move -- moves the player's ship d-pixels left/right
 Player.prototype.move = function(d) {
   if (this.x+d < 0 || this.x+this.width+d > game.gameFieldWidth()) {
     return;
@@ -32,11 +41,16 @@ Player.prototype.move = function(d) {
   this.x += d;
 }
 
+// shoot -- creates a new Missile object at player's x location
 Player.prototype.shoot = function() {
   game.addMissile(new Missile());
 }
 
-// Enemy Object
+/* Enemy Object
+ * Enemies are packed together and move in unity based on the
+ * game timer.
+ */
+
 function Enemy(x, y) {
   this.x = x;
   this.y = y;
@@ -47,6 +61,8 @@ function Enemy(x, y) {
   this.direction = -1;
 }
 
+// update -- moves enemy object left or right, swapping when it
+//           hits an edge.
 Enemy.prototype.update = function() {
   if (this.x <= 0 || this.x + this.width >= game.gameFieldWidth()) {
     return true;
@@ -54,6 +70,7 @@ Enemy.prototype.update = function() {
   return false;
 }
 
+// advance -- moves enemy down a level
 Enemy.prototype.advance = function() {
   this.direction *= -1;
   this.y += 10;
@@ -63,23 +80,30 @@ Enemy.prototype.advance = function() {
   return false
 }
 
-// Renderer
+/* Renderer Object
+ * Renders graphics using fills on the canvas.
+ */
+
 var renderer = (function () {
+  // _drawEnemy -- draws the enemy object
   function _drawEnemy(context, enemy) {
     context.fillStyle = "red";
     context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
+  // _drawPlayer -- draws the player object
   function _drawPlayer(context, player) {
     context.fillStyle = "blue";
     context.fillRect(player.x, player.y, player.width, player.height);
   }
 
+  // _drawMissile -- draws the missile object
   function _drawMissile(context, missile) {
     context.fillStyle = "green";
     context.fillRect(missile.x, missile.y, missile.width, missile.height);
   }
-
+  
+  // _render -- renders all graphics and controls missile hits
   function _render() {
     var player = game.player();
     var canvas = document.getElementById("game-layer");
@@ -110,7 +134,9 @@ var renderer = (function () {
   };
 })();
 
-// Physics Object
+/* Physics Object
+ * Controls updates to graphics based on the clock.
+ */
 var physics = (function() {
   function _update() {
     var entities = game.entities();
@@ -125,7 +151,9 @@ var physics = (function() {
   return { update: _update };
 })();
 
-// Game Object
+/* Game
+ * Main control loop for the game.
+ */
 var game = (function() {
   var _player = new Player(0);
   var _gameFieldHeight = 200;
@@ -139,6 +167,7 @@ var game = (function() {
   var _missiles = [];
   var deadships = 0;
 
+  // _start -- initializes game settings
   function _start() {
     document.onkeydown = function(e) {
       if(e.key == "ArrowRight") {
@@ -162,6 +191,7 @@ var game = (function() {
     window.requestAnimationFrame(this.update.bind(this));
   }
 
+  // _update -- gets called by other objects when required to update
   function _update() {
     physics.update();
     var setReverse = false;
@@ -213,6 +243,7 @@ var game = (function() {
     window.requestAnimationFrame(this.update.bind(this));
   }
 
+  // _addMissile -- all instances missiles get added to the game object
   function _addMissile(missile) {
     _missiles = _missiles.filter(function (e) {
       return e != null;
@@ -220,6 +251,7 @@ var game = (function() {
     _missiles.push(missile);
   }
 
+  // _endGame -- displays a "GAME OVER" screen
   function _endgame() {
     var canvas = document.getElementById("game-layer");
     var context = canvas.getContext("2d");
