@@ -45,7 +45,7 @@ function Player(x, gs) {
   var playerHeight = gs.height / 10;
   this.x = x;
   this.y = game.gameSettings().height - playerHeight * 1.2;
-  this.width = playerHeight * 1.5;
+  this.width = playerHeight * 1.1;
   this.height = playerHeight;
 }
 
@@ -73,7 +73,7 @@ Player.prototype.shoot = function() {
 function Enemy(i, j, r, c, gs) {
   var boxwidth = gs.width * 3 / 4;
   var enemyboxwidth = boxwidth / c;
-  var enemyboxheight = enemyboxwidth * (9 / 16);
+  var enemyboxheight = enemyboxwidth * 0.9;
   var padding = enemyboxwidth / 7;
   this.x = enemyboxwidth * j;
   this.y = enemyboxheight * i;
@@ -108,14 +108,18 @@ Enemy.prototype.advance = function() {
 var renderer = (function () {
   // _drawEnemy -- draws the enemy object
   function _drawEnemy(context, enemy) {
-    context.fillStyle = "red";
-    context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    // context.fillStyle = "red";
+    // context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    var img = document.getElementById("teacher-img-1");
+    context.drawImage(img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
   // _drawPlayer -- draws the player object
   function _drawPlayer(context, player) {
-    context.fillStyle = "blue";
-    context.fillRect(player.x, player.y, player.width, player.height);
+    // context.fillStyle = "blue";
+    // context.fillRect(player.x, player.y, player.width, player.height);
+    var img = document.getElementById("player-img");
+    context.drawImage(img, player.x, player.y, player.width, player.height);
   }
 
   // _drawMissile -- draws the missile object
@@ -181,7 +185,7 @@ var game = (function() {
   var _entities = [];
   var leftLimit = 0;
   var rightLimit = 200;
-  var _rows = 5;
+  var _rows = 4;
   var _cols = 8;
   var movementLength = 10;
   var _missiles = [];
@@ -206,6 +210,9 @@ var game = (function() {
         _player.move(-movementLength);
         renderer.render();
       } else if (e.keyCode == 32) {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
         if (_shootTimer >= 20) {
           _shootTimer = 0;
           _player.shoot();
@@ -216,7 +223,7 @@ var game = (function() {
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
       for (var n = 0; n < _cols; n++) {
-        entity_row.push(new Enemy(m+1, n+1, _rows, _cols, _gameSettings));
+        entity_row.push(new Enemy(m, n+1, _rows, _cols, _gameSettings));
       }
       _entities.push(entity_row);
     }
