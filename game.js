@@ -167,6 +167,8 @@ var game = (function() {
   var _missiles = [];
   var deadships = 0;
 
+  var _shootTimer = 0;
+
   // _start -- initializes game settings
   function _start() {
     document.onkeydown = function(e) {
@@ -177,9 +179,16 @@ var game = (function() {
         _player.move(-movementLength);
         renderer.render();
       } else if (e.keyCode == 32) {
+        if (_shootTimer >= 40) {
+          _shootTimer = 0;
+          _player.shoot();
+        }
+      }
+    }
+    document.onkeyup = function(e) {
+      if(e.keyCode == 32) {
         _player.shoot();
       }
-      
     }
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
@@ -194,6 +203,7 @@ var game = (function() {
   // _update -- gets called by other objects when required to update
   function _update() {
     physics.update();
+    _shootTimer++;
     var setReverse = false;
     for (var m = 0; m < game.missiles().length; m++) {
       if (game.missiles()[m] != null) {
