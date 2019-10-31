@@ -53,6 +53,7 @@ function Player(x, gs) {
   this.y = game.gameSettings().height - playerHeight * 1.2;
   this.width = playerHeight * 1.1;
   this.height = playerHeight;
+  this.blink = false;
 }
 
 // move -- moves the player's ship d-pixels left/right
@@ -154,14 +155,10 @@ var renderer = (function () {
       for (var j = 0; j < game.cols(); j++) {
         entity = entities[i][j];
         if (entity == null) continue;
-        if(entity instanceof Enemy) {
-          _drawEnemy(context, entity, i+1);
-        } else if(entity instanceof Player) {
-          _drawPlayer(context, entity);
-        }
+        _drawEnemy(context, entity, i+1);
       }
     }
-    _drawPlayer(context, player);
+    if (!player.blink) _drawPlayer(context, player);
   }
 
   return {
@@ -200,6 +197,8 @@ var game = (function() {
   var movementLength = 10;
   var _missiles = [];
   var deadships = 0;
+  var invulnTimer = 0;
+  var invuln = false;
 
   var _shootTimer = 0;
 
@@ -241,7 +240,6 @@ var game = (function() {
       }
       _entities.push(entity_row);
     }
-    console.log(_entities);
     window.requestAnimationFrame(this.update.bind(this));
   }
 
@@ -249,6 +247,22 @@ var game = (function() {
   function _update() {
     physics.update();
     _shootTimer++;
+    if (invuln) {
+      invulnTimer++;
+      if (invulnTimer >= 15 && invulnTimer < 25 ||
+          invulnTimer >= 40 && invulnTimer < 50 ||
+          invulnTimer >= 65 && invulnTimer < 75) {
+
+        _player.blink = true;
+          } else {
+            _player.blink = false;
+          }
+      if (invulnTimer >= 75) {
+        invulnTimer = 0;
+        invuln = false;
+        _player.blink = false;
+      }
+    }
     var setReverse = false;
     for (var m = 0; m < game.missiles().length; m++) {
       if (game.missiles()[m] != null) {
@@ -286,6 +300,14 @@ var game = (function() {
                     deadships = 0;
                     levelUp()
                   }
+            }
+          } else if (game.missiles()[k].d == -1) {
+            if (game.missiles()[k].x < _player.x+_player.width && 
+                game.missiles()[k].x > _player.x &&
+                game.missiles()[k].y < _player.y+_player.height &&
+                game.missiles()[k].y > _player.y) {
+                  game.missiles()[k] = null;
+                  invuln = true;
             }
           }
         }
