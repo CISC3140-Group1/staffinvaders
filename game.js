@@ -107,10 +107,10 @@ Enemy.prototype.advance = function() {
 
 var renderer = (function () {
   // _drawEnemy -- draws the enemy object
-  function _drawEnemy(context, enemy) {
+  function _drawEnemy(context, enemy, i) {
     // context.fillStyle = "red";
     // context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-    var img = document.getElementById("teacher-img-1");
+    var img = document.getElementById("staff-img-"+i);
     context.drawImage(img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
@@ -145,7 +145,7 @@ var renderer = (function () {
         entity = entities[i][j];
         if (entity == null) continue;
         if(entity instanceof Enemy) {
-          _drawEnemy(context, entity);
+          _drawEnemy(context, entity, i+1);
         } else if(entity instanceof Player) {
           _drawPlayer(context, entity);
         }
@@ -199,8 +199,12 @@ var game = (function() {
     _gameSettings.setDimensions(640, 480);
     _player = new Player(0, _gameSettings);
     var canvas = document.getElementById("game-layer");
-    canvas.width = _gameSettings.width;
-    canvas.height = _gameSettings.height;
+    let ratio = 4;
+    canvas.width = _gameSettings.width*ratio;
+    canvas.height = _gameSettings.height*ratio;
+    canvas.style.width = _gameSettings.width;
+    canvas.style.height = _gameSettings.height;
+    canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
 
     document.onkeydown = function(e) {
       if(e.key == "ArrowRight") {
@@ -308,11 +312,11 @@ var game = (function() {
     var canvas = document.getElementById("game-layer");
     var context = canvas.getContext("2d");
     context.fillStyle = "gray";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillRect(0, 0, canvas.width/4, canvas.height/4);
     context.fillStyle = "black";
     context.font = "30px Arial";
     context.textAlign = "center";
-    context.fillText("Game Over", canvas.width/2, canvas.height/2);
+    context.fillText("Game Over", canvas.width/8, canvas.height/8);
   }
 
   return {
