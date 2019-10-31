@@ -99,11 +99,11 @@ function Enemy(i, j, r, c, gs) {
   var boxwidth = gs.width * 3 / 4;
   var enemyboxwidth = boxwidth / c;
   var enemyboxheight = enemyboxwidth * 0.9;
-  var padding = enemyboxwidth / 7;
+  this.padding = enemyboxwidth / 7;
   this.x = enemyboxwidth * j;
   this.y = enemyboxheight * i;
-  this.width = enemyboxwidth - padding;
-  this.height = enemyboxheight - padding;
+  this.width = enemyboxwidth - this.padding;
+  this.height = enemyboxheight - this.padding;
   this.direction = game.gameSettings().speed;
 }
 
@@ -123,7 +123,7 @@ Enemy.prototype.shootMissile = function() {
 // advance -- moves enemy down a level
 Enemy.prototype.advance = function() {
   this.direction *= -1;
-  this.y += this.height/2;
+  this.y += this.height/2 + this.padding;
   if (this.y + this.height >= game.player().y+4) {
     return true
   }
@@ -258,7 +258,7 @@ var game = (function() {
         if (e.target == document.body) {
           e.preventDefault();
         }
-        if (_shootTimer >= 15) {
+        if (_shootTimer >= 20) {
           _shootTimer = 0;
           _player.shoot();
         }
@@ -322,6 +322,7 @@ var game = (function() {
           if (didHit(_entities[m][n], _barricades[i])) {
             _barricades[i].loseDurability(_barricades[i].healthIncrement);
             _entities[m][n] = null;
+            destroyShip();
             break;
           }
         }
@@ -331,13 +332,9 @@ var game = (function() {
           
           if (game.missiles()[k].d == 1) {
             if (didHit(game.missiles()[k], _entities[m][n])) {
-                  game.missiles()[k] = null;
-                  _entities[m][n] = null;
-                  deadships+=1;
-                  if (deadships == _rows*_cols) {
-                    deadships = 0;
-                    levelUp()
-                  }
+              game.missiles()[k] = null;
+              _entities[m][n] = null;
+              destroyShip();
             } else {
               for (var i = 0; i < 3; i++) {
                 if (_barricades[i].destroyed) continue;
@@ -402,6 +399,18 @@ var game = (function() {
       for (var n = 0; n < _cols; n++) {
         _entities[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
       }
+    }
+    for (var i = 0; i < 3; i++) {
+      _barricades[i] = new Barricade(_gameSettings, i);
+    }
+  }
+
+  // destroyShip -- controls destruction of enemy objects
+  function destroyShip() {
+    deadships+=1;
+    if (deadships == _rows*_cols) {
+      deadships = 0;
+      levelUp()
     }
   }
 
