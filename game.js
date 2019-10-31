@@ -8,6 +8,11 @@ function GameSettings() {
   this.speed = 1;
 }
 
+function setSpeed(x) {
+  console.log("Hey");
+  game.gameSettings().speed=x
+}
+
 GameSettings.prototype.setDimensions = function(width, height) {
   this.width = width;
   this.height = height;
@@ -19,12 +24,13 @@ GameSettings.prototype.setDimensions = function(width, height) {
  * edge of the map.
  */
 
-function Missile() {
-  this.x = game.player().x + game.player().width/2 - 2;
-  this.y = game.player().y;
+function Missile(entity, d) {
+  this.d = d;
+  this.x = entity.x + entity.width/2 - 2;
+  this.y = entity.y;
   this.width = 4;
-  this.height = game.player().height/2;
-  this.direction = 8;
+  this.height = entity.height/2;
+  this.direction = 8 * d;
 }
 
 // update -- missile moves to top per iteration 
@@ -62,7 +68,7 @@ Player.prototype.move = function(d) {
 
 // shoot -- creates a new Missile object at player's x location
 Player.prototype.shoot = function() {
-  game.addMissile(new Missile());
+  game.addMissile(new Missile(this, 1));
 }
 
 /* Enemy Object
@@ -79,7 +85,7 @@ function Enemy(i, j, r, c, gs) {
   this.y = enemyboxheight * i;
   this.width = enemyboxwidth - padding;
   this.height = enemyboxheight - padding;
-  this.direction = gs.speed;
+  this.direction = game.gameSettings().speed;
 }
 
 // update -- moves enemy object left or right, swapping when it
@@ -89,6 +95,10 @@ Enemy.prototype.update = function(gs) {
     return true;
   }
   return false;
+}
+
+Enemy.prototype.shootMissile = function() {
+  game.addMissile(new Missile(this, -1));
 }
 
 // advance -- moves enemy down a level
@@ -185,8 +195,8 @@ var game = (function() {
   var _entities = [];
   var leftLimit = 0;
   var rightLimit = 200;
-  var _rows = 4;
-  var _cols = 8;
+  var _rows = 5;
+  var _cols = 11;
   var movementLength = 10;
   var _missiles = [];
   var deadships = 0;
@@ -250,6 +260,13 @@ var game = (function() {
     for (var m = 0; m < _rows; m++) {
       for (var n = 0; n < _cols; n++) {
         if (_entities[m][n] == null) continue;
+        if (Math.floor(Math.random() * Math.floor(500)) == 69) {
+          var mdx = _rows-1;
+          while (mdx >= 0 && _entities[mdx][n] == null) mdx--;
+          if (m == mdx) {
+            _entities[m][n].shootMissile();
+          }
+        }
         if (_entities[m][n].update()) {
           setReverse = true;
           break;
@@ -257,18 +274,20 @@ var game = (function() {
         for (var k = 0; k < game.missiles().length; k++) {
           if (_entities[m][n] == null) break;
           if (game.missiles()[k] == null) continue;
-          if (game.missiles()[k].x < _entities[m][n].x+_entities[m][n].width && 
-              game.missiles()[k].x > _entities[m][n].x &&
-              game.missiles()[k].y < _entities[m][n].y+_entities[m][n].height &&
-              game.missiles()[k].y > _entities[m][n].y) {
-                game.missiles()[k] = null;
-                _entities[m][n] = null;
-                deadships+=1;
-                if (deadships == _rows*_cols) {
-                  deadships = 0;
-                  levelUp()
-                }
-              }
+          if (game.missiles()[k].d == 1) {
+            if (game.missiles()[k].x < _entities[m][n].x+_entities[m][n].width && 
+                game.missiles()[k].x > _entities[m][n].x &&
+                game.missiles()[k].y < _entities[m][n].y+_entities[m][n].height &&
+                game.missiles()[k].y > _entities[m][n].y) {
+                  game.missiles()[k] = null;
+                  _entities[m][n] = null;
+                  deadships+=1;
+                  if (deadships == _rows*_cols) {
+                    deadships = 0;
+                    levelUp()
+                  }
+            }
+          }
         }
       }
     }
@@ -298,7 +317,6 @@ var game = (function() {
 
   // proceedLevel -- respawns the enemies and increases speed
   function levelUp() {
-    console.log("LEVEL UP")
     _gameSettings.speed += 0.5;
     for (var m = 0; m < _rows; m++) {
       for (var n = 0; n < _cols; n++) {
