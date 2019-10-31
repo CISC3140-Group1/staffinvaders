@@ -5,17 +5,35 @@
 function GameSettings() {
   this.width = 640;
   this.height = 480;
-  this.speed = 1;
+  this.speed = 2;
 }
 
 function setSpeed(x) {
-  console.log("Hey");
   game.gameSettings().speed=x
 }
 
 GameSettings.prototype.setDimensions = function(width, height) {
   this.width = width;
   this.height = height;
+}
+
+/* Barricade Object
+ * A barricade which guards a player. Takes 24 hits until destroyed.
+ */
+
+function Barricade(gs, i) {
+  this.x = (gs.width / 4) * i + (gs.width / 16) * (i+1);
+  this.y = game.player().y - (gs.width / 4) * 0.55 - game.player().height/4;
+  this.width = gs.width / 4;
+  this.height = (gs.width * 0.55) / 4;
+  this.destroyed = false;
+  this.health = 24;
+  this.healthIncrement = this.health/3;
+}
+
+Barricade.prototype.loseDurability = function(x) {
+  this.health -= x;
+  if (this.health <= 0) this.destroyed = true;
 }
 
 /* Missile Object
@@ -117,6 +135,12 @@ Enemy.prototype.advance = function() {
  */
 
 var renderer = (function () {
+  // _drawBarricade -- draws the barricade object
+  function _drawBarricade(context, barricade) {
+    var img = document.getElementById("wall-img-" + Math.ceil(barricade.health/barricade.healthIncrement));
+    context.drawImage(img, barricade.x, barricade.y, barricade.width, barricade.height);
+  }
+
   // _drawEnemy -- draws the enemy object
   function _drawEnemy(context, enemy, i) {
     // context.fillStyle = "red";
@@ -147,6 +171,10 @@ var renderer = (function () {
     context.fillStyle =  "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
     var entity, entities = game.entities();
+    for (var i = 0; i < game.barricades().length; i++) {
+      if (game.barricades()[i].destroyed) continue;
+      _drawBarricade(context, game.barricades()[i]);
+    }
     for (var i = 0; i < game.missiles().length; i++) {
       if (game.missiles()[i] == null) continue;
       _drawMissile(context, game.missiles()[i])
@@ -190,6 +218,7 @@ var game = (function() {
   var _player;
   var _gameSettings;
   var _entities = [];
+  var _barricades = [];
   var leftLimit = 0;
   var rightLimit = 200;
   var _rows = 5;
@@ -207,6 +236,9 @@ var game = (function() {
     _gameSettings = new GameSettings();
     _gameSettings.setDimensions(640, 480);
     _player = new Player(0, _gameSettings);
+    for (var i = 0; i < 3; i++) {
+      _barricades.push(new Barricade(_gameSettings, i));
+    }
     var canvas = document.getElementById("game-layer");
     let ratio = 4;
     canvas.width = _gameSettings.width*ratio;
@@ -250,14 +282,14 @@ var game = (function() {
     if (invuln) {
       invulnTimer++;
       if (invulnTimer >= 15 && invulnTimer < 25 ||
-          invulnTimer >= 40 && invulnTimer < 50 ||
-          invulnTimer >= 65 && invulnTimer < 75) {
+          invulnTimer >= 45 && invulnTimer < 50 ||
+          invulnTimer >= 70 && invulnTimer < 75) {
 
         _player.blink = true;
           } else {
             _player.blink = false;
           }
-      if (invulnTimer >= 75) {
+      if (invulnTimer >= 85) {
         invulnTimer = 0;
         invuln = false;
         _player.blink = false;
@@ -285,14 +317,20 @@ var game = (function() {
           setReverse = true;
           break;
         }
+        for (var i = 0; i < 3; i++) {
+          if (_barricades[i].destroyed) continue;
+          if (didHit(_entities[m][n], _barricades[i])) {
+            _barricades[i].loseDurability(_barricades[i].healthIncrement);
+            _entities[m][n] = null;
+            break;
+          }
+        }
         for (var k = 0; k < game.missiles().length; k++) {
           if (_entities[m][n] == null) break;
           if (game.missiles()[k] == null) continue;
+          
           if (game.missiles()[k].d == 1) {
-            if (game.missiles()[k].x < _entities[m][n].x+_entities[m][n].width && 
-                game.missiles()[k].x > _entities[m][n].x &&
-                game.missiles()[k].y < _entities[m][n].y+_entities[m][n].height &&
-                game.missiles()[k].y > _entities[m][n].y) {
+            if (didHit(game.missiles()[k], _entities[m][n])) {
                   game.missiles()[k] = null;
                   _entities[m][n] = null;
                   deadships+=1;
@@ -300,14 +338,28 @@ var game = (function() {
                     deadships = 0;
                     levelUp()
                   }
+            } else {
+              for (var i = 0; i < 3; i++) {
+                if (_barricades[i].destroyed) continue;
+                if (didHit(game.missiles()[k], _barricades[i])) {
+                  game.missiles()[k] = null;
+                  break;
+                }
+              }
             }
           } else if (game.missiles()[k].d == -1) {
-            if (game.missiles()[k].x < _player.x+_player.width && 
-                game.missiles()[k].x > _player.x &&
-                game.missiles()[k].y < _player.y+_player.height &&
-                game.missiles()[k].y > _player.y) {
+            if (didHit(game.missiles()[k], _player)) {
+              game.missiles()[k] = null;
+              invuln = true;
+            } else {
+              for (var i = 0; i < 3; i++) {
+                if (_barricades[i].destroyed) continue;
+                if (didHit(game.missiles()[k], _barricades[i])) {
                   game.missiles()[k] = null;
-                  invuln = true;
+                  _barricades[i].loseDurability(1);
+                  break;
+                }
+              }
             }
           }
         }
@@ -335,6 +387,12 @@ var game = (function() {
       return e != null;
     });
     _missiles.push(missile);
+  }
+
+  // didHit -- returns true if entity X and Y collide
+  function didHit(a, b) {
+    return (((a.x < b.x + b.width && a.x > b.x) || (a.x + a.width < b.x + b.width && a.x + a.width > b.x)) &&
+            ((a.y < b.y + b.height && a.y > b.y) || (a.y + a.height < b.y + b.height && a.y + a.height > b.y)));
   }
 
   // proceedLevel -- respawns the enemies and increases speed
@@ -365,6 +423,7 @@ var game = (function() {
     start: _start,
     update: _update,
     entities: function() { return _entities; },
+    barricades: function() { return _barricades; },
     rows: function() { return _rows; },
     cols: function() { return _cols; },
     missiles: function() { return _missiles },
