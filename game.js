@@ -3,8 +3,8 @@
  */
 
 function GameSettings() {
-  this.width = 640;
-  this.height = 480;
+  this.width = 800;
+  this.height = 600;
   this.speed = 0.5;
 }
 
@@ -245,7 +245,7 @@ var game = (function() {
   // _start -- initializes game settings
   function _start() {
     _gameSettings = new GameSettings();
-    _gameSettings.setDimensions(640, 480);
+    _gameSettings.setDimensions(800, 600);
     _player = new Player(0);
     for (var i = 0; i < 3; i++) {
       _barricades.push(new Barricade(i));
