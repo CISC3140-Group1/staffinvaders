@@ -238,6 +238,7 @@ var game = (function() {
   var invuln = false;
   var prepareEnemyAdvance = false;
   var gameover = false;
+  var livesleft = 5;
 
   var shootTimer = 0;
 
@@ -325,6 +326,18 @@ var game = (function() {
     }
   }
 
+  // loseLife -- updates when player gets hit
+  function loseLife() {
+    if (invuln) {
+      console.log("Already lost life");
+      return;
+    }
+    invuln = true;
+    document.getElementById("life-"+livesleft).style.visibility="hidden";
+    livesleft--;
+    if (livesleft == 0) _endgame();
+  }
+
   // updateScore -- updates score when ship is destroyed
   function updateScore(m) {
     score += (_rows-m) * _gameSettings.speed * 10;
@@ -341,7 +354,7 @@ var game = (function() {
     }
   }
 
-  // _endGame -- displays a "GAME OVER" screen
+  // _endgame -- displays a "GAME OVER" screen
   function _endgame() {
     gameover = true;
     window.location.href = "./gameover.html";
@@ -416,6 +429,7 @@ var game = (function() {
           } else if (game.missiles()[k].d == -1) {
             if (didHit(game.missiles()[k], _player)) {
               game.missiles()[k] = null;
+              loseLife();
               invuln = true;
             } else {
               for (var i = 0; i < 3; i++) {
