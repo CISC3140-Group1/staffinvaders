@@ -133,7 +133,7 @@ Enemy.prototype.shoot = function() {
 // advance -- moves enemy down a level
 Enemy.prototype.advance = function() {
   this.direction *= -1;
-  this.y += this.height/2 + this.padding;
+  this.y += this.height/4 + this.padding;
   if (this.y + this.height >= game.player().y+4) {
     return true
   }
