@@ -5,7 +5,7 @@
 function GameSettings() {
   this.width = 640;
   this.height = 480;
-  this.speed = 4;
+  this.speed = 0.5;
 }
 
 function setSpeed(x) {
