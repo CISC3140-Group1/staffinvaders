@@ -5,7 +5,7 @@
 function GameSettings() {
   this.width = 640;
   this.height = 480;
-  this.speed = 2;
+  this.speed = 4;
 }
 
 function setSpeed(x) {
@@ -21,11 +21,11 @@ GameSettings.prototype.setDimensions = function(width, height) {
  * A barricade which guards a player. Takes 24 hits until destroyed.
  */
 
-function Barricade(gs, i) {
-  this.x = (gs.width / 4) * i + (gs.width / 16) * (i+1);
-  this.y = game.player().y - (gs.width / 4) * 0.55 - game.player().height/4;
-  this.width = gs.width / 4;
-  this.height = (gs.width * 0.55) / 4;
+function Barricade(i) {
+  this.x = (game.gameSettings().width / 4) * i + (game.gameSettings().width / 16) * (i+1);
+  this.y = game.player().y - (game.gameSettings().width / 4) * 0.55 - game.player().height/4;
+  this.width = game.gameSettings().width / 4;
+  this.height = (game.gameSettings().width * 0.55) / 4;
   this.destroyed = false;
   this.health = 24;
   this.healthIncrement = this.health/3;
@@ -65,23 +65,25 @@ Missile.prototype.update = function() {
  * spawn missiles.
  */
 
-function Player(x, gs) {
-  var playerHeight = gs.height / 10;
+function Player(x) {
+  var playerHeight = game.gameSettings().height / 10;
   this.x = x;
   this.y = game.gameSettings().height - playerHeight * 1.2;
   this.width = playerHeight * 1.1;
   this.height = playerHeight;
   this.blink = false;
+  this.movementSpeed = 10;
 }
 
 // move -- moves the player's ship d-pixels left/right
 Player.prototype.move = function(d) {
-  if (this.x+d < 0) {
+  let movementLength = d * this.movementSpeed
+  if (this.x+movementLength< 0) {
     this.x = 0;
-  } else if (this.x+this.width+d > game.gameSettings().width) {
+  } else if (this.x+this.width+movementLength > game.gameSettings().width) {
     this.x = game.gameSettings().width-this.width;
   } else {
-    this.x += d;
+    this.x += movementLength;
   }
 }
 
@@ -95,11 +97,13 @@ Player.prototype.shoot = function() {
  * game timer.
  */
 
-function Enemy(i, j, r, c, gs) {
-  var boxwidth = gs.width * 3 / 4;
+function Enemy(i, j, r, c) {
+  var boxwidth = game.gameSettings().width * 3 / 4;
   var enemyboxwidth = boxwidth / c;
   var enemyboxheight = enemyboxwidth * 0.9;
   this.padding = enemyboxwidth / 7;
+  this.i = i;
+  this.j = j;
   this.x = enemyboxwidth * j;
   this.y = enemyboxheight * i;
   this.width = enemyboxwidth - this.padding;
@@ -109,15 +113,21 @@ function Enemy(i, j, r, c, gs) {
 
 // update -- moves enemy object left or right, swapping when it
 //           hits an edge.
-Enemy.prototype.update = function(gs) {
+Enemy.prototype.update = function() {
   if (this.x <= 0 || this.x + this.width >= game.gameSettings().width) {
     return true;
   }
   return false;
 }
 
-Enemy.prototype.shootMissile = function() {
-  game.addMissile(new Missile(this, -1));
+Enemy.prototype.shoot = function() {
+  if (Math.floor(Math.random() * Math.floor(500)) == 69) {
+    var mdx = game.rows()-1;
+    while (mdx >= 0 && game.enemies()[mdx][this.j] == null) mdx--;
+    if (this.i == mdx) {
+      game.addMissile(new Missile(this, -1));
+    }
+  }
 }
 
 // advance -- moves enemy down a level
@@ -170,7 +180,7 @@ var renderer = (function () {
     var context = canvas.getContext("2d");
     context.fillStyle =  "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    var entity, entities = game.entities();
+    var entity, enemies = game.enemies();
     for (var i = 0; i < game.barricades().length; i++) {
       if (game.barricades()[i].destroyed) continue;
       _drawBarricade(context, game.barricades()[i]);
@@ -181,7 +191,7 @@ var renderer = (function () {
     }
     for (var i = 0; i < game.rows(); i++) {
       for (var j = 0; j < game.cols(); j++) {
-        entity = entities[i][j];
+        entity = enemies[i][j];
         if (entity == null) continue;
         _drawEnemy(context, entity, i+1);
       }
@@ -199,11 +209,11 @@ var renderer = (function () {
  */
 var physics = (function() {
   function _update() {
-    var entities = game.entities();
+    var enemies = game.enemies();
     for (var i = 0; i < game.rows(); i++) {
       for (var j = 0; j < game.cols(); j++) {
-        if (entities[i][j] == null) continue;
-        entities[i][j].x += entities[i][j].direction;
+        if (enemies[i][j] == null) continue;
+        enemies[i][j].x += enemies[i][j].direction;
       }
     }
   }
@@ -216,28 +226,27 @@ var physics = (function() {
  */
 var game = (function() {
   var _player;
-  var _gameSettings;
-  var _entities = [];
+  var _enemies = [];
   var _barricades = [];
-  var leftLimit = 0;
-  var rightLimit = 200;
+  var _gameSettings;
   var _rows = 5;
   var _cols = 11;
-  var movementLength = 10;
   var _missiles = [];
   var deadships = 0;
   var invulnTimer = 0;
   var invuln = false;
+  var prepareEnemyAdvance = false;
+  var gameover = false;
 
-  var _shootTimer = 0;
+  var shootTimer = 0;
 
   // _start -- initializes game settings
   function _start() {
     _gameSettings = new GameSettings();
     _gameSettings.setDimensions(640, 480);
-    _player = new Player(0, _gameSettings);
+    _player = new Player(0);
     for (var i = 0; i < 3; i++) {
-      _barricades.push(new Barricade(_gameSettings, i));
+      _barricades.push(new Barricade(i));
     }
     var canvas = document.getElementById("game-layer");
     let ratio = 4;
@@ -249,17 +258,17 @@ var game = (function() {
 
     document.onkeydown = function(e) {
       if(e.key == "ArrowRight") {
-        _player.move(movementLength);
+        _player.move(1);
         renderer.render();
       } else if (e.key == "ArrowLeft") {
-        _player.move(-movementLength);
+        _player.move(-1);
         renderer.render();
       } else if (e.keyCode == 32) {
         if (e.target == document.body) {
           e.preventDefault();
         }
-        if (_shootTimer >= 20) {
-          _shootTimer = 0;
+        if (shootTimer >= 0) {
+          shootTimer = 0;
           _player.shoot();
         }
       }
@@ -268,17 +277,70 @@ var game = (function() {
     for (var m = 0; m < _rows; m++) {
       entity_row  = []
       for (var n = 0; n < _cols; n++) {
-        entity_row.push(new Enemy(m, n, _rows, _cols, _gameSettings));
+        entity_row.push(new Enemy(m, n, _rows, _cols));
       }
-      _entities.push(entity_row);
+      _enemies.push(entity_row);
     }
     window.requestAnimationFrame(this.update.bind(this));
   }
 
   // _update -- gets called by other objects when required to update
   function _update() {
+    if (gameover) return;
     physics.update();
-    _shootTimer++;
+    shootTimer++;
+    updateInvulnerability();
+    updateMissiles();
+    updateEnemies();
+    if (prepareEnemyAdvance) advanceEnemy();
+    renderer.render();
+    window.requestAnimationFrame(this.update.bind(this));
+  }
+
+  // _addMissile -- all instances missiles get added to the game object
+  function _addMissile(missile) {
+    _missiles = _missiles.filter(function (e) {
+      return e != null;
+    });
+    _missiles.push(missile);
+  }
+
+  // didHit -- returns true if entity X and Y collide
+  function didHit(a, b) {
+    return (((a.x < b.x + b.width && a.x > b.x) || (a.x + a.width < b.x + b.width && a.x + a.width > b.x)) &&
+            ((a.y < b.y + b.height && a.y > b.y) || (a.y + a.height < b.y + b.height && a.y + a.height > b.y)));
+  }
+
+  // proceedLevel -- respawns the enemies and increases speed
+  function levelUp() {
+    _gameSettings.speed += 0.25;
+    for (var m = 0; m < _rows; m++) {
+      for (var n = 0; n < _cols; n++) {
+        _enemies[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
+      }
+    }
+    for (var i = 0; i < 3; i++) {
+      _barricades[i] = new Barricade(_gameSettings, i);
+    }
+  }
+
+  // destroyShip -- controls destruction of enemy objects
+  function destroyShip() {
+    deadships+=1;
+    if (deadships == _rows*_cols) {
+      deadships = 0;
+      levelUp()
+    }
+  }
+
+  // _endGame -- displays a "GAME OVER" screen
+  function _endgame() {
+    gameover = true;
+    window.location.href = "./gameover.html";
+  }
+
+
+  function updateInvulnerability() {
     if (invuln) {
       invulnTimer++;
       if (invulnTimer >= 15 && invulnTimer < 25 ||
@@ -295,7 +357,9 @@ var game = (function() {
         _player.blink = false;
       }
     }
-    var setReverse = false;
+  }
+
+  function updateMissiles() {
     for (var m = 0; m < game.missiles().length; m++) {
       if (game.missiles()[m] != null) {
         if (!game.missiles()[m].update()) {
@@ -303,38 +367,35 @@ var game = (function() {
         }
       }
     }
+  }
+
+  function updateEnemies() {
     for (var m = 0; m < _rows; m++) {
       for (var n = 0; n < _cols; n++) {
-        if (_entities[m][n] == null) continue;
-        if (Math.floor(Math.random() * Math.floor(500)) == 69) {
-          var mdx = _rows-1;
-          while (mdx >= 0 && _entities[mdx][n] == null) mdx--;
-          if (m == mdx) {
-            _entities[m][n].shootMissile();
-          }
-        }
-        if (_entities[m][n].update()) {
-          setReverse = true;
+        if (_enemies[m][n] == null) continue;
+        _enemies[m][n].shoot();
+        if (_enemies[m][n].update()) {
+          prepareEnemyAdvance = true;
           break;
         }
         for (var i = 0; i < 3; i++) {
           if (_barricades[i].destroyed) continue;
-          if (didHit(_entities[m][n], _barricades[i])) {
+          if (didHit(_enemies[m][n], _barricades[i])) {
             _barricades[i].loseDurability(_barricades[i].healthIncrement);
-            _entities[m][n] = null;
+            _enemies[m][n] = null;
             destroyShip();
             break;
           }
         }
         for (var k = 0; k < game.missiles().length; k++) {
-          if (_entities[m][n] == null) break;
+          if (_enemies[m][n] == null) break;
           if (game.missiles()[k] == null) continue;
-          
           if (game.missiles()[k].d == 1) {
-            if (didHit(game.missiles()[k], _entities[m][n])) {
+            if (didHit(game.missiles()[k], _enemies[m][n])) {
               game.missiles()[k] = null;
-              _entities[m][n] = null;
+              _enemies[m][n] = null;
               destroyShip();
+              break;
             } else {
               for (var i = 0; i < 3; i++) {
                 if (_barricades[i].destroyed) continue;
@@ -362,68 +423,19 @@ var game = (function() {
         }
       }
     }
-    if (setReverse) {
-      for (var m = 0; m < _rows; m++) {
-        for (var n = 0; n < _cols; n++) {
-          if (_entities[m][n] == null) continue;
-          if (_entities[m][n].advance()) {
-            _endgame();
-            return;
-          }
+  }
+
+  function advanceEnemy() {
+    for (var m = 0; m < _rows; m++) {
+      for (var n = 0; n < _cols; n++) {
+        if (_enemies[m][n] == null) continue;
+        if (_enemies[m][n].advance()) {
+          _endgame();
+          return;
         }
       }
     }
-
-    renderer.render();
-    window.requestAnimationFrame(this.update.bind(this));
-  }
-
-  // _addMissile -- all instances missiles get added to the game object
-  function _addMissile(missile) {
-    _missiles = _missiles.filter(function (e) {
-      return e != null;
-    });
-    _missiles.push(missile);
-  }
-
-  // didHit -- returns true if entity X and Y collide
-  function didHit(a, b) {
-    return (((a.x < b.x + b.width && a.x > b.x) || (a.x + a.width < b.x + b.width && a.x + a.width > b.x)) &&
-            ((a.y < b.y + b.height && a.y > b.y) || (a.y + a.height < b.y + b.height && a.y + a.height > b.y)));
-  }
-
-  // proceedLevel -- respawns the enemies and increases speed
-  function levelUp() {
-    _gameSettings.speed += 0.5;
-    for (var m = 0; m < _rows; m++) {
-      for (var n = 0; n < _cols; n++) {
-        _entities[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
-      }
-    }
-    for (var i = 0; i < 3; i++) {
-      _barricades[i] = new Barricade(_gameSettings, i);
-    }
-  }
-
-  // destroyShip -- controls destruction of enemy objects
-  function destroyShip() {
-    deadships+=1;
-    if (deadships == _rows*_cols) {
-      deadships = 0;
-      levelUp()
-    }
-  }
-
-  // _endGame -- displays a "GAME OVER" screen
-  function _endgame() {
-    var canvas = document.getElementById("game-layer");
-    var context = canvas.getContext("2d");
-    context.fillStyle = "gray";
-    context.fillRect(0, 0, canvas.width/4, canvas.height/4);
-    context.fillStyle = "black";
-    context.font = "30px Arial";
-    context.textAlign = "center";
-    context.fillText("Game Over", canvas.width/8, canvas.height/8);
+    prepareEnemyAdvance = false;
   }
 
   return {
@@ -431,7 +443,7 @@ var game = (function() {
     player: function() { return _player; },
     start: _start,
     update: _update,
-    entities: function() { return _entities; },
+    enemies: function() { return _enemies; },
     barricades: function() { return _barricades; },
     rows: function() { return _rows; },
     cols: function() { return _cols; },
