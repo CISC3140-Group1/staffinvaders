@@ -225,6 +225,7 @@ var physics = (function() {
  * Main control loop for the game.
  */
 var game = (function() {
+  var score = 0;
   var _player;
   var _enemies = [];
   var _barricades = [];
@@ -267,7 +268,7 @@ var game = (function() {
         if (e.target == document.body) {
           e.preventDefault();
         }
-        if (shootTimer >= 0) {
+        if (shootTimer >= 20) {
           shootTimer = 0;
           _player.shoot();
         }
@@ -324,8 +325,15 @@ var game = (function() {
     }
   }
 
+  // updateScore -- updates score when ship is destroyed
+  function updateScore(m) {
+    score += (_rows-m) * _gameSettings.speed * 10;
+    document.getElementById("score").innerHTML = score;
+  }
+
   // destroyShip -- controls destruction of enemy objects
-  function destroyShip() {
+  function destroyShip(m) {
+    updateScore(m);
     deadships+=1;
     if (deadships == _rows*_cols) {
       deadships = 0;
@@ -383,7 +391,7 @@ var game = (function() {
           if (didHit(_enemies[m][n], _barricades[i])) {
             _barricades[i].loseDurability(_barricades[i].healthIncrement);
             _enemies[m][n] = null;
-            destroyShip();
+            destroyShip(m);
             break;
           }
         }
@@ -394,7 +402,7 @@ var game = (function() {
             if (didHit(game.missiles()[k], _enemies[m][n])) {
               game.missiles()[k] = null;
               _enemies[m][n] = null;
-              destroyShip();
+              destroyShip(m);
               break;
             } else {
               for (var i = 0; i < 3; i++) {
