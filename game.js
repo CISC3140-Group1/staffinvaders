@@ -66,7 +66,7 @@ Missile.prototype.update = function() {
  */
 
 function Player(x) {
-  var playerHeight = game.gameSettings().height / 10;
+  var playerHeight = game.gameSettings().height / 15;
   this.x = x;
   this.y = game.gameSettings().height - playerHeight * 1.2;
   this.width = playerHeight * 1.1;
@@ -98,7 +98,7 @@ Player.prototype.shoot = function() {
  */
 
 function Enemy(i, j, r, c) {
-  var boxwidth = game.gameSettings().width * 3 / 4;
+  var boxwidth = game.gameSettings().width * 5 / 8;
   var enemyboxwidth = boxwidth / c;
   var enemyboxheight = enemyboxwidth * 0.9;
   this.padding = enemyboxwidth / 7;
