@@ -262,6 +262,8 @@ var game = (function() {
       if(e.key == "ArrowRight") {
         _player.move(1);
         renderer.render();
+      } else if (e.key == "Escape") {
+        window.location.href = "./index.html";
       } else if (e.key == "ArrowLeft") {
         _player.move(-1);
         renderer.render();
