@@ -239,6 +239,7 @@ var game = (function() {
   var prepareEnemyAdvance = false;
   var gameover = false;
   var livesleft = 5;
+  var _paused = false;
 
   var shootTimer = 0;
 
@@ -260,11 +261,34 @@ var game = (function() {
 
     document.onkeydown = function(e) {
       if(e.key == "ArrowRight") {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
+        if (_paused) return;
         _player.move(1);
         renderer.render();
       } else if (e.key == "Escape") {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
         window.location.href = "./index.html";
+      } else if (e.keyCode == 80) {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
+        document.getElementById("paused").style.visibility = "visible";
+        _paused = true;
+      } else if (e.keyCode == 82) {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
+        document.getElementById("paused").style.visibility = "hidden";
+        _paused = false;
       } else if (e.key == "ArrowLeft") {
+        if (e.target == document.body) {
+          e.preventDefault();
+        }
+        if (_paused) return;
         _player.move(-1);
         renderer.render();
       } else if (e.keyCode == 32) {
@@ -291,12 +315,15 @@ var game = (function() {
   // _update -- gets called by other objects when required to update
   function _update() {
     if (gameover) return;
+    console.log(_paused);
+    if (!_paused) {
     physics.update();
     shootTimer++;
     updateInvulnerability();
     updateMissiles();
     updateEnemies();
     if (prepareEnemyAdvance) advanceEnemy();
+    }
     renderer.render();
     window.requestAnimationFrame(this.update.bind(this));
   }
@@ -323,7 +350,7 @@ var game = (function() {
         _enemies[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
       }
     }
-    for (var i = 0; i < _baricades.length; i++) {
+    for (var i = 0; i < _barricades.length; i++) {
       _barricades[i] = new Barricade(_gameSettings, i);
     }
   }
@@ -472,7 +499,8 @@ var game = (function() {
     rows: function() { return _rows; },
     cols: function() { return _cols; },
     missiles: function() { return _missiles },
-    addMissile: _addMissile
+    addMissile: _addMissile,
+    paused: function() { return _paused }
   };
   renderer.render();
   window.requestAnimationFrame(this.update.bind(this));
