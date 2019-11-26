@@ -5,7 +5,7 @@
 function GameSettings() {
   this.width = 800;
   this.height = 600;
-  this.speed = 0.5;
+  this.speed = 5.0;
 }
 
 function setSpeed(x) {
@@ -22,10 +22,10 @@ GameSettings.prototype.setDimensions = function(width, height) {
  */
 
 function Barricade(i) {
-  this.x = (game.gameSettings().width / 4) * i + (game.gameSettings().width / 16) * (i+1);
+  this.x = (game.gameSettings().width / 5) * i + (game.gameSettings().width / 25) * (i+1);
   this.y = game.player().y - (game.gameSettings().width / 4) * 0.55 - game.player().height/4;
-  this.width = game.gameSettings().width / 4;
-  this.height = (game.gameSettings().width * 0.55) / 4;
+  this.width = game.gameSettings().width / 5;
+  this.height = (game.gameSettings().width * 0.55) / 5;
   this.destroyed = false;
   this.health = 24;
   this.healthIncrement = this.health/3;
@@ -247,7 +247,7 @@ var game = (function() {
     _gameSettings = new GameSettings();
     _gameSettings.setDimensions(800, 600);
     _player = new Player(0);
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 4; i++) {
       _barricades.push(new Barricade(i));
     }
     var canvas = document.getElementById("game-layer");
@@ -321,7 +321,7 @@ var game = (function() {
         _enemies[m][n] = new Enemy(m, n+1, _rows, _cols, _gameSettings);
       }
     }
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < _baricades.length; i++) {
       _barricades[i] = new Barricade(_gameSettings, i);
     }
   }
@@ -399,7 +399,7 @@ var game = (function() {
           prepareEnemyAdvance = true;
           break;
         }
-        for (var i = 0; i < 3; i++) {
+        for (var i = 0; i < _barricades.length; i++) {
           if (_barricades[i].destroyed) continue;
           if (didHit(_enemies[m][n], _barricades[i])) {
             _barricades[i].loseDurability(_barricades[i].healthIncrement);
@@ -418,7 +418,7 @@ var game = (function() {
               destroyShip(m);
               break;
             } else {
-              for (var i = 0; i < 3; i++) {
+              for (var i = 0; i < _barricades.length; i++) {
                 if (_barricades[i].destroyed) continue;
                 if (didHit(game.missiles()[k], _barricades[i])) {
                   game.missiles()[k] = null;
@@ -432,7 +432,7 @@ var game = (function() {
               loseLife();
               invuln = true;
             } else {
-              for (var i = 0; i < 3; i++) {
+              for (var i = 0; i < _barricades.length; i++) {
                 if (_barricades[i].destroyed) continue;
                 if (didHit(game.missiles()[k], _barricades[i])) {
                   game.missiles()[k] = null;
