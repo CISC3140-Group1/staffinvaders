@@ -43,6 +43,11 @@ Barricade.prototype.loseDurability = function(x) {
  */
 
 function Missile(entity, d) {
+  if (d > 0) {
+    new Audio("./sound/Enemy_Shooting.wav").play();
+  } else {
+    new Audio("./sound/PlayerShooting.wav").play();
+  }
   this.d = d;
   this.x = entity.x + entity.width/2 - 2;
   this.y = entity.y;
@@ -240,7 +245,6 @@ var game = (function() {
   var gameover = false;
   var livesleft = 5;
   var _paused = false;
-
   var shootTimer = 0;
 
   // _start -- initializes game settings
@@ -315,7 +319,6 @@ var game = (function() {
   // _update -- gets called by other objects when required to update
   function _update() {
     if (gameover) return;
-    console.log(_paused);
     if (!_paused) {
     physics.update();
     shootTimer++;
@@ -355,7 +358,7 @@ var game = (function() {
     }
   }
 
-  // loseLife -- updates when player gets hit
+  // loseLife -- updates wwhen player gets hit
   function loseLife() {
     if (invuln) {
       console.log("Already lost life");
@@ -442,6 +445,7 @@ var game = (function() {
           if (game.missiles()[k] == null) continue;
           if (game.missiles()[k].d == 1) {
             if (didHit(game.missiles()[k], _enemies[m][n])) {
+              new Audio("./sound/enemygettinghit.mp3").play();
               game.missiles()[k] = null;
               _enemies[m][n] = null;
               destroyShip(m);
@@ -457,6 +461,7 @@ var game = (function() {
             }
           } else if (game.missiles()[k].d == -1) {
             if (didHit(game.missiles()[k], _player)) {
+              new Audio("./sound/PlayerGettingHit.mp3").play();
               game.missiles()[k] = null;
               loseLife();
               invuln = true;
