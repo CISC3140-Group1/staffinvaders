@@ -5,8 +5,16 @@
     <meta name="description" content="-- Invaders">
     <meta name="author" content="CISC3140--Group1">
     <link href="https://fonts.googleapis.com/css?family=Audiowide&display=swap" rel="stylesheet">
+    <link href="./styles.css" rel="stylesheet">
   </head>
   <body style="overflow:hidden">
+    <div id="start-btn" style="position:fixed;visibility:visible;width:800px;height:600px;background-color:rgba(0,0,0,0.75);">
+      <div style="font-family:'Audiowide';width:100%;top:50%;color:black;position:relative;text-align:center">
+        <a href="#" onclick="clickedStart()">
+          START
+        </a>
+      </div>
+    </div>
     <div id="paused" style="position:fixed;visibility:hidden;width:800px;height:630px;background-color:rgba(0,0,0,0.75);">
       <div style="font-family:'Audiowide';width:100%;top:50%;color:white;position:relative;text-align:center">
         PAUSED
@@ -18,34 +26,34 @@
       </div>
       <div id="score" style="height:100%;float:left">0</div>
       <div id="life-1" style="height:100%;visibility:visible;float:right">
-        <img style="height:100%;" src="player-image.png">
+        <img style="height:100%;" src="./images/player-image.png">
       </div>
       <div id="life-2" style="height:100%;visibility:visible;float:right">
-        <img style="height:100%;" src="player-image.png">
+        <img style="height:100%;" src="./images/player-image.png">
       </div>
       <div id="life-3" style="height:100%;visibility:visible;float:right">
-        <img style="height:100%;" src="player-image.png">
+        <img style="height:100%;" src="./images/player-image.png">
       </div>
       <div id="life-4" style="height:100%;visibility:visible;float:right">
-        <img style="height:100%;" src="player-image.png">
+        <img style="height:100%;" src="./images/player-image.png">
       </div>
       <div id="life-5" style="height:100%;visibility:visible;float:right">
-        <img style="height:100%;" src="player-image.png">
+        <img style="height:100%;" src="./images/player-image.png">
       </div>
     </div>
     <div style="width:800px;height:2px;background-color:white;"></div>
     <div style="width:800px;height:8px;background-color:black;"></div>
     <div>
-      <canvas id="game-layer" width="640" height="480"></canvas>
-      <img style="visibility:hidden;" id="staff-img-1" src="staff-image-1.png">
-      <img style="visibility:hidden;" id="staff-img-2" src="staff-image-2.png">
-      <img style="visibility:hidden;" id="staff-img-3" src="staff-image-3.png">
-      <img style="visibility:hidden;" id="staff-img-4" src="staff-image-4.png">
-      <img style="visibility:hidden;" id="staff-img-5" src="staff-image-5.png">
-      <img style="visibility:hidden;" id="player-img" src="player-image.png">
-      <img style="visibility:hidden;" id="wall-img-1" src="wall-image-1.png">
-      <img style="visibility:hidden;" id="wall-img-2" src="wall-image-2.png">
-      <img style="visibility:hidden;" id="wall-img-3" src="wall-image-3.png">
+      <canvas id="game-layer" width="800" height="600"></canvas>
+      <img style="visibility:hidden;" id="staff-img-1" src="./images/staff-image-1.png">
+      <img style="visibility:hidden;" id="staff-img-2" src="./images/staff-image-2.png">
+      <img style="visibility:hidden;" id="staff-img-3" src="./images/staff-image-3.png">
+      <img style="visibility:hidden;" id="staff-img-4" src="./images/staff-image-4.png">
+      <img style="visibility:hidden;" id="staff-img-5" src="./images/staff-image-5.png">
+      <img style="visibility:hidden;" id="player-img" src="./images/player-image.png">
+      <img style="visibility:hidden;" id="wall-img-1" src="./images/wall-image-1.png">
+      <img style="visibility:hidden;" id="wall-img-2" src="./images/wall-image-2.png">
+      <img style="visibility:hidden;" id="wall-img-3" src="./images/wall-image-3.png">
       <script src="game.js"></script> 
     </div>
   </body>
