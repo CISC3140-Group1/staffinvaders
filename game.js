@@ -1,3 +1,12 @@
+/**
+ * game.js
+ * Objects:
+ *    Player    -   User controlled object which moves left/right and shoots upward.
+ *    Enemy     -   Automated object(s) moves left/right/down and shoots downward.
+ *    Barricade -   Objects with static locations which deteriorate when hit.
+ *    Missile   -   Created by enemies and the player which cause
+                    destruction of other objects.
+
 /* gameSettings Object
  * Specifies the sizing of the window
  */
@@ -246,9 +255,12 @@ var game = (function() {
   var livesleft = 5;
   var _paused = false;
   var shootTimer = 0;
+  var bgMusic = new Audio("./sounds/General_Background_Music.ogg");
+  var bgMusicToggled = true;
 
   // _start -- initializes game settings
   function _start() {
+    bgMusic.play();
     _gameSettings = new GameSettings();
     _gameSettings.setDimensions(800, 600);
     _player = new Player(0);
@@ -281,12 +293,14 @@ var game = (function() {
           e.preventDefault();
         }
         document.getElementById("paused").style.visibility = "visible";
+        bgMusic.pause();
         _paused = true;
       } else if (e.keyCode == 82) {
         if (e.target == document.body) {
           e.preventDefault();
         }
         document.getElementById("paused").style.visibility = "hidden";
+        if (bgMusicToggled) bgMusic.play();
         _paused = false;
       } else if (e.key == "ArrowLeft") {
         if (e.target == document.body) {
@@ -303,6 +317,13 @@ var game = (function() {
           shootTimer = 0;
           _player.shoot();
         }
+      } else if (e.keyCode == 77) {
+        if (bgMusicToggled) {
+          bgMusic.pause();
+        } else {
+          bgMusic.play();
+        }
+        bgMusicToggled = !bgMusicToggled;
       }
     }
     
