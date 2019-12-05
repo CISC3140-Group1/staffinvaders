@@ -1,11 +1,24 @@
 /**
  * game.js
- * Objects:
- *    Player    -   User controlled object which moves left/right and shoots upward.
- *    Enemy     -   Automated object(s) moves left/right/down and shoots downward.
- *    Barricade -   Objects with static locations which deteriorate when hit.
- *    Missile   -   Created by enemies and the player which cause
-                    destruction of other objects.
+ ******************************************************************************
+ * Description: 
+ *    The primary game loop containing definitions of classes and their 
+ *    methods. Entity objects are ones which physically appear on the screen, 
+ *    and function as living objects that take actions. Game objects are ones 
+ *    svwhich control the flow of the gameplay.
+ *   
+ * Entity Objects:
+ *    Player:     User controlled object which moves left/right and shoots up.
+ *    Enemy:      Automated object(s) moves left/right/down and shoots down.
+ *    Barricade:  Objects with static locations which deteriorate when hit.
+ *    Missile     Created by enemies and the player which cause destruction 
+ *                of other objects.
+ *  Game Objects:
+ *    Renderer:   Renders game graphics.
+ *    Physics:    Controls automation of objects (enemy ship movement)
+ *    Game:       Main game object controlling renderer, physics, entities.
+ * 
+                 
 
 /* gameSettings Object
  * Specifies the sizing of the window
