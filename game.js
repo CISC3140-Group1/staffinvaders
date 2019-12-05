@@ -19,7 +19,6 @@
  *    Game:       Main game object controlling renderer, physics, entities.
  * 
                  
-
 /* gameSettings Object
  * Specifies the sizing of the window
  */
@@ -388,7 +387,7 @@ var game = (function() {
       }
     }
     for (var i = 0; i < _barricades.length; i++) {
-      _barricades[i] = new Barricade(_gameSettings, i);
+      _barricades[i] = new Barricade(i);
     }
   }
 
